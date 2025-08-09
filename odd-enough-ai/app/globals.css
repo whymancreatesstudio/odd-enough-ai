@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b0b0f;
+  --card: #12121a;
+  --primary: #ffe14d;
+  --text: #f1f5f9;
+  --dim: #a8b0bd;
+  --accent: #8b5cf6;
+}
+
+html, body, #__next { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4;
+}
+.card {
+  @apply bg-[var(--card)] rounded-2xl shadow-soft border border-white/5;
+}
+.btn {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-black font-medium hover:opacity-90 transition;
+}
+.input {
+  @apply w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-[var(--text)] placeholder-[var(--dim)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)];
+}
+.select {
+  @apply w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)];
+}
+.table {
+  @apply w-full text-sm;
+}
+.table th, .table td {
+  @apply px-3 py-2 text-left;
+}
+.table thead {
+  @apply text-[var(--dim)];
+}
+.table tbody tr {
+  @apply border-t border-white/5;
+}
+.prose { color: var(--text); }
+.prose h1, .prose h2, .prose h3 { color: var(--text); }
