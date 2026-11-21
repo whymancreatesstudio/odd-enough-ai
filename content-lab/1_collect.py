@@ -111,7 +111,7 @@ with cf.ThreadPoolExecutor(workers) as ex:
         r = f.result()
         k = r.split(":")[0]
         counts[k] = counts.get(k, 0) + 1
-        if r not in ("skip", "ok", "old"):
+        if r not in ("skip", "ok", "old", "stopped"):
             print(f"  {futs[f]['id']}: {r}")
         if i % 25 == 0:
             print(f"  {i}/{len(entries)}  {counts}")
