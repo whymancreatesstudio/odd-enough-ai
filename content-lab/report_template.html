@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Content Lab</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--ink:#1b1b1f;--mute:#6b6b76;--line:#e4e4df;--accent:#1b1b1f;
+--storytelling:#d55e00;--tactical:#0072b2;--opinion:#cc79a7;--qa:#009e73;--mindset:#b8a000;
+--r-hook:#d55e00;--r-setup:#6b6b76;--r-body:#0072b2;--r-payoff:#009e73;--r-cta:#cc79a7}
+@media(prefers-color-scheme:dark){:root{--bg:#141417;--card:#1d1d22;--ink:#ececf0;--mute:#9a9aa6;--line:#2e2e36;--accent:#ececf0;
+--storytelling:#ff8a3d;--tactical:#4aa8e8;--opinion:#e79ac4;--qa:#2fcf9f;--mindset:#e6cf2e;--r-hook:#ff8a3d;--r-setup:#9a9aa6;--r-body:#4aa8e8;--r-payoff:#2fcf9f;--r-cta:#e79ac4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+header{padding:20px 24px 8px}h1{margin:0;font-size:22px}.sub{color:var(--mute);font-size:13px;margin-top:2px}
+main{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:16px;padding:12px 24px 40px}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:12px 16px 40px}header{padding:16px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+h2{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+svg{width:100%;height:auto;display:block}svg text{fill:var(--mute);font-size:11px}.grid{stroke:var(--line)}
+.dot{cursor:pointer;opacity:.75}.dot:hover,.dot.sel{opacity:1;stroke:var(--ink);stroke-width:2}.dim{opacity:.12}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:13px}.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.row{display:grid;grid-template-columns:110px 1fr 90px;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px}
+.row:hover,.row.on{background:var(--bg)}.bar{height:12px;border-radius:3px;min-width:2px}.row.small{opacity:.5}
+.num{text-align:right;font-variant-numeric:tabular-nums}.star{color:#e0a800}.n{color:var(--mute);font-size:11px}
+.list .item{display:flex;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.item:hover{background:var(--bg)}.item img{width:36px;height:64px;object-fit:cover;border-radius:4px;background:var(--line)}
+.item .t{flex:1}.item .v{color:var(--mute);font-size:12px}
+.detail img{width:140px;border-radius:8px;float:left;margin:0 14px 8px 0}.detail h3{margin:0 0 4px;font-size:16px}
+.chip{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;color:#fff;margin-right:6px;min-width:52px;text-align:center}
+.sent{padding:6px 0;border-top:1px solid var(--line);clear:both;font-size:14px}.sent .p{color:var(--mute);font-size:11px}
+a{color:var(--tactical)}button{font:inherit}.clear{background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:12px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:5px 8px;border-radius:6px;font-size:12px;max-width:260px;display:none;z-index:9}
+</style></head><body>
+<header><h1 id="h1">Content Lab</h1><div class="sub" id="sub"></div></header>
+<main>
+<div>
+ <div class="card"><h2>Every video: upload date × views (log)</h2><svg id="chart" viewBox="0 0 760 420"></svg><div class="legend" id="legend"></div></div>
+ <div class="card"><h2 id="listTitle">Videos</h2><div class="list" id="list"><span class="sub">Click a style or hook to list its videos, best first.</span></div></div>
+</div>
+<div>
+ <div class="card"><h2>Styles · median views</h2><div id="styles"></div></div>
+ <div class="card"><h2>Hooks · median views</h2><div id="hooks"></div></div>
+ <div class="card detail" id="detail" hidden></div>
+</div>
+</main><div id="tip"></div>
+<script>
+const D=/*DATA*/null;
+const COL={storytelling:'var(--storytelling)',tactical:'var(--tactical)',opinion:'var(--opinion)',qa:'var(--qa)',mindset:'var(--mindset)'};
+const ROLE={hook:'var(--r-hook)',setup:'var(--r-setup)',body:'var(--r-body)',payoff:'var(--r-payoff)',cta:'var(--r-cta)'};
+const $=id=>document.getElementById(id), fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+'K':String(n);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let filter=null, sel=null;
+$('h1').textContent='Content Lab · '+D.channel.replace(/^https?:\/\/(www\.)?/,'').replace(/\/shorts.*$/,'');
+$('sub').textContent=D.videos.length+' videos since '+D.since+' · Jev cost $'+D.cost.toFixed(4)+' ('+D.tokens.toLocaleString()+' input tokens)';
+// chart
+const W=760,H=420,m={l:52,r:14,t:10,b:30},V=D.videos,t=v=>+new Date(v.date);
+const x0=Math.min(...V.map(t)),x1=Math.max(...V.map(t)),ys=V.map(v=>Math.max(v.views,1));
+const lo=Math.floor(Math.log10(Math.min(...ys))),hi=Math.ceil(Math.log10(Math.max(...ys)));
+const X=v=>m.l+(t(v)-x0)/(x1-x0||1)*(W-m.l-m.r), Y=v=>m.t+(1-(Math.log10(Math.max(v.views,1))-lo)/(hi-lo||1))*(H-m.t-m.b);
+let g='';for(let p=lo;p<=hi;p++){const y=m.t+(1-(p-lo)/(hi-lo||1))*(H-m.t-m.b);g+=`<line class="grid" x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}"/><text x="${m.l-6}" y="${y+4}" text-anchor="end">${fmt(10**p)}</text>`}
+const d0=new Date(x0),d1=new Date(x1);let c=new Date(d0.getFullYear(),d0.getMonth()+1,1);const step=Math.max(1,Math.round((d1-d0)/2.6e9/6));
+for(;c<=d1;c=new Date(c.getFullYear(),c.getMonth()+step,1)){const xx=m.l+(c-x0)/(x1-x0||1)*(W-m.l-m.r);g+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${m.t}" y2="${H-m.b}"/><text x="${xx}" y="${H-10}" text-anchor="middle">${c.toLocaleDateString('en',{month:'short',year:'2-digit'})}</text>`}
+$('chart').innerHTML=g+V.map((v,i)=>`<circle class="dot" data-i="${i}" cx="${X(v).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4.5" fill="${COL[v.style]}"/>`).join('');
+$('legend').innerHTML=Object.keys(COL).map(k=>`<span><i class="sw" style="background:${COL[k]}"></i>${k}</span>`).join('');
+const tip=$('tip');
+$('chart').addEventListener('mousemove',e=>{const i=e.target.dataset?.i;if(i==null){tip.style.display='none';return}const v=V[i];tip.innerHTML=`<b>${esc(v.title)}</b><br>${v.date} · ${v.views.toLocaleString()} views<br>${v.style} · ${v.hook} hook`;tip.style.display='block';tip.style.left=Math.min(e.clientX+12,innerWidth-280)+'px';tip.style.top=e.clientY+14+'px'});
+$('chart').addEventListener('mouseleave',()=>tip.style.display='none');
+$('chart').addEventListener('click',e=>{const i=e.target.dataset?.i;if(i!=null)show(V[i])});
+// rankings
+function ranking(id,rows,key){const mx=Math.max(...rows.map(r=>r.median));
+$(id).innerHTML=rows.map(r=>`<div class="row ${r.small?'small':''}" data-k="${key}" data-v="${r.name}"><span>${r.winner?'<span class="star" title="highest median (n≥'+D.min_n+')">★</span> ':''}${r.name}</span><div><div class="bar" style="width:${r.median/mx*100}%;background:${key==='style'?COL[r.name]:'var(--accent)'}"></div></div><span class="num">${fmt(r.median)} <span class="n">n=${r.n}</span></span></div>`).join('')}
+ranking('styles',D.styles,'style');ranking('hooks',D.hooks,'hook');
+document.addEventListener('click',e=>{const r=e.target.closest('.row');if(r){const k=r.dataset.k,v=r.dataset.v;filter=filter&&filter.k===k&&filter.v===v?null:{k,v};apply()}
+const it=e.target.closest('.item');if(it)show(V.find(x=>x.id===it.dataset.id));if(e.target.id==='clr'){filter=null;apply()}});
+function apply(){document.querySelectorAll('.row').forEach(r=>r.classList.toggle('on',!!filter&&r.dataset.k===filter.k&&r.dataset.v===filter.v));
+document.querySelectorAll('.dot').forEach(d=>d.classList.toggle('dim',!!filter&&V[d.dataset.i][filter.k]!==filter.v));
+if(!filter){$('listTitle').textContent='Videos';$('list').innerHTML='<span class="sub">Click a style or hook to list its videos, best first.</span>';return}
+const L=V.filter(v=>v[filter.k]===filter.v).sort((a,b)=>b.views-a.views);
+$('listTitle').innerHTML=`${filter.k}: ${filter.v} · ${L.length} videos <button class="clear" id="clr">clear</button>`;
+$('list').innerHTML=L.map(v=>`<div class="item" data-id="${v.id}"><img loading="lazy" src="data/${v.id}/thumb.jpg" alt=""><div class="t">${esc(v.title)}<div class="v">${v.date}</div></div><div class="num"><b>${fmt(v.views)}</b><div class="v">views</div></div></div>`).join('')}
+function show(v){sel=v;document.querySelectorAll('.dot').forEach(d=>d.classList.toggle('sel',V[d.dataset.i]===v));const el=$('detail');el.hidden=false;
+el.innerHTML=`<img src="data/${v.id}/thumb.jpg" alt=""><h3>${esc(v.title)}</h3><div class="sub">${v.date} · <b>${v.views.toLocaleString()}</b> views${v.likes!=null?' · '+v.likes.toLocaleString()+' likes':''}</div>
+<div class="sub" style="margin:4px 0 10px">${v.style} (${Math.round(v.style_p*100)}%) · ${v.hook} hook (${Math.round(v.hook_p*100)}%) · CTA ${Math.round(v.cta*100)}% · <a href="${v.url}" target="_blank" rel="noopener">open video</a></div>`+
+v.roles.map((s,i)=>`<div class="sent"><span class="chip" style="background:${ROLE[s.role]||'var(--mute)'}">${s.role}</span>${esc(s.t)} <span class="p">${Math.round(s.p*100)}%</span></div>`).join('');el.scrollIntoView({behavior:'smooth',block:'nearest'})}
+</script></body></html>
