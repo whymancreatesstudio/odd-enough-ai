@@ -28,3 +28,9 @@
 **Total: about 14,154 videos, about $73 (range $58-$116), about 18 hours of machine time.**
 
 Assumptions: transcription $0.006/min at the stated average length; Jev $0.042 per million input tokens (about 3-4K tokens per video, so about $0.0002); Instagram scraping about $2.6 per 1,000 reels on Apify (unverified, check your plan); YouTube listing is free; downloads about 3 s per video at 2 at a time.
+
+## Decisions (2026-11-22)
+- Transcription: Groq whisper-large-v3 (language hint `te` for the Telugu creators, auto-detect elsewhere).
+- Translation to English: Groq openai/gpt-oss-120b; Jev labels run on the English text.
+- Cap: 500 most recent per creator. Budget: up to $20. Estimated: ~9,000 videos, ~$13 transcription + ~$2 Jev + ~$2 translation + $0-4 Instagram.
+- Instagram handles for Mohak Mangal and Samay Raina in `pipeline/creators.json` are guesses: confirm before running.

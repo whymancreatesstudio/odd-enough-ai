@@ -1,0 +1,22 @@
+[
+ {"n":1,"folder":"01_raw_talks_vk","name":"Raw Talks with VK","platform":"youtube","url":"https://www.youtube.com/@RawTalkswithVK/shorts","lang":"te"},
+ {"n":2,"folder":"02_telugu_connects","name":"Telugu Connects","platform":"youtube","url":"https://www.youtube.com/@TeluguConnects_/shorts","lang":"te","confirm":"handle"},
+ {"n":3,"folder":"03_prasads_tech_telugu","name":"Prasad's Tech in Telugu","platform":"youtube","url":"https://www.youtube.com/@PrasadTechInTelugu/shorts","lang":"te"},
+ {"n":4,"folder":"04_aye_jude","name":"Aye Jude","platform":"youtube","url":"https://www.youtube.com/@AyeJude/shorts","lang":"te","confirm":"language"},
+ {"n":5,"folder":"05_think_school","name":"Think School","platform":"youtube","url":"https://www.youtube.com/@thinkschool/shorts","lang":null},
+ {"n":6,"folder":"06_dhruv_rathee_shorts","name":"Dhruv Rathee Shorts","platform":"youtube","url":"https://www.youtube.com/@drshorts/shorts","lang":"hi"},
+ {"n":7,"folder":"07_abhi_and_niyu","name":"Abhi and Niyu","platform":"youtube","url":"https://www.youtube.com/@AbhiandNiyu/shorts","lang":null},
+ {"n":8,"folder":"08_mohak_mangal","name":"Mohak Mangal","platform":"instagram","url":"https://www.instagram.com/mohakmangal/","lang":null,"confirm":"instagram handle"},
+ {"n":9,"folder":"09_samay_raina","name":"Samay Raina","platform":"instagram","url":"https://www.instagram.com/maisamayhoon/","lang":null,"confirm":"platform+handle"},
+ {"n":10,"folder":"10_tanmay_bhat","name":"Tanmay Bhat","platform":"youtube","url":"https://www.youtube.com/@TanmayBhat/shorts","lang":null},
+ {"n":11,"folder":"11_rebel_kid","name":"Rebel Kid","platform":"instagram","url":"https://www.instagram.com/the.rebel.kid/","lang":null},
+ {"n":12,"folder":"12_ankur_warikoo","name":"Ankur Warikoo","platform":"youtube","url":"https://www.youtube.com/@warikoo/shorts","lang":null},
+ {"n":13,"folder":"13_raj_shamani","name":"Raj Shamani","platform":"youtube","url":"https://www.youtube.com/@RajShamani/shorts","lang":null,"also":[{"label":"clips","url":"https://www.youtube.com/@RajShamaniClips/shorts","confirm":"which clips channel"}]},
+ {"n":14,"folder":"14_ca_rachana_ranade","name":"CA Rachana Ranade","platform":"youtube","url":"https://www.youtube.com/@CARachanaRanade/shorts","lang":null,"confirm":"which language channels"},
+ {"n":15,"folder":"15_nas_daily","name":"Nas Daily","platform":"youtube","url":"https://www.youtube.com/@nasdaily/shorts","lang":"en"},
+ {"n":16,"folder":"16_zack_d_films","name":"Zack D. Films","platform":"youtube","url":"https://www.youtube.com/@ZackDFilms/shorts","lang":"en"},
+ {"n":17,"folder":"17_mrbeast_shorts","name":"MrBeast (Shorts)","platform":"youtube","url":"https://www.youtube.com/@MrBeast/shorts","lang":"en"},
+ {"n":18,"folder":"18_johnny_harris","name":"Johnny Harris","platform":"youtube","url":"https://www.youtube.com/@johnnyharris/shorts","lang":"en"},
+ {"n":19,"folder":"19_jenny_hoyos","name":"Jenny Hoyos","platform":"youtube","url":"https://www.youtube.com/@JennyHoyos/shorts","lang":"en"},
+ {"n":20,"folder":"20_ryan_serhant","name":"Ryan Serhant","platform":"youtube","url":"https://www.youtube.com/@RyanSerhant/shorts","lang":"en"}
+]
