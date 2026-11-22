@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content Lab</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--ink:#1c1c1a;--mute:#6b6b66;--line:#e4e3de;--accent:#1c1c1a;--win:#b45309;
+--c-storytelling:#E69F00;--c-tactical:#0072B2;--c-opinion:#D55E00;--c-qa:#009E73;--c-mindset:#CC79A7}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--card:#1d1d1b;--ink:#ecebe6;--mute:#97968f;--line:#33322e;--accent:#ecebe6;--win:#f59e0b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;padding:20px 16px 60px}
+.wrap{max-width:1280px;margin:0 auto}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:14px;margin:0 0 10px;letter-spacing:.02em}
+.sub{color:var(--mute);margin:0 0 18px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.top{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:16px}
+.bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px;margin-top:16px}
+@media(max-width:900px){.top,.bottom{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--mute);font-size:11px}
+.dot{cursor:pointer;stroke:var(--card);stroke-width:1}.dot.dim{opacity:.12}
+.row{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 6px;border-radius:6px;cursor:pointer;border:1px solid transparent;width:100%;background:none;color:inherit;font:inherit;text-align:left}
+.row:hover{background:var(--bg)}.row.sel{border-color:var(--accent)}
+.row .sw{width:12px;height:12px;border-radius:50%;background:var(--mute)}
+.row .nm{font-weight:600}.row .meta{color:var(--mute);font-size:12px}
+.bar{height:6px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--mute)}
+.win .bar i{background:var(--win)}.win .nm::after{content:" ★ winner";color:var(--win);font-weight:700;font-size:12px}
+.few{opacity:.5}
+.group{margin-bottom:16px}.group h2{display:flex;justify-content:space-between}
+.vid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 4px;cursor:pointer;color:inherit;font:inherit}
+.vid:hover,.vid.sel{background:var(--bg)}
+.vid .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vid .v{font-variant-numeric:tabular-nums;font-weight:600}
+.list{max-height:520px;overflow:auto}
+.detail{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px}
+@media(max-width:560px){.detail{grid-template-columns:1fr}}
+.detail img{width:100%;border-radius:8px;background:var(--line);aspect-ratio:9/16;object-fit:cover}
+.stats{color:var(--mute);font-size:13px;margin:4px 0 10px}
+.chip{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--mute);margin-right:4px}
+.sent{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+.role{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;text-align:center;color:#fff}
+.r-hook{background:#b91c1c}.r-setup{background:#6b7280}.r-body{background:#2563eb}.r-payoff{background:#15803d}.r-cta{background:#7c3aed}
+.empty{color:var(--mute);padding:18px 4px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;max-width:280px;display:none;z-index:9}
+.foot{color:var(--mute);font-size:12px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Content Lab</h1>
+  <p class="sub" id="sub"></p>
+  <div class="top">
+    <div class="card"><h2>Every video: upload date × views (log scale)</h2><svg id="chart" viewBox="0 0 760 420" role="img" aria-label="Scatter of every video by upload date and views"></svg></div>
+    <div class="card">
+      <div class="group"><h2>Styles <span class="meta" style="color:var(--mute);font-weight:400">median views</span></h2><div id="styles"></div></div>
+      <div class="group" style="margin-bottom:0"><h2>Hooks <span class="meta" style="color:var(--mute);font-weight:400">median views</span></h2><div id="hooks"></div></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="card"><h2 id="listTitle">Click a style or hook to list its videos, best first</h2><div class="list" id="list"><div class="empty">Nothing selected yet.</div></div></div>
+    <div class="card"><h2>Video</h2><div id="detail"><div class="empty">Click a video (a dot, or a row in the list).</div></div></div>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+<div id="tip"></div>
+<script>
+const D = __DATA__, V = D.videos, MIN_N = D.min_n;
+const STYLES = ["storytelling","tactical","opinion","qa","mindset"];
+const col = s => `var(--c-${s})`;
+const fmt = n => n>=1e6 ? (n/1e6).toFixed(n>=1e7?0:1)+"M" : n>=1e3 ? (n/1e3).toFixed(n>=1e4?0:1)+"K" : String(n);
+const med = a => { const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+const esc = t => String(t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let sel = null, selVid = null; // sel = {key:'style'|'hook', name}
+
+function rank(key){
+  const g = {}; V.forEach(v => (g[v[key]] = g[v[key]] || []).push(v.views));
+  return Object.entries(g).map(([name,a])=>({name,n:a.length,median:med(a)}))
+    .sort((a,b)=> (a.n<MIN_N)-(b.n<MIN_N) || b.median-a.median);
+}
+function rankPanel(key, el){
+  const r = rank(key), max = Math.max(...r.map(x=>x.median)), win = r.find(x=>x.n>=MIN_N);
+  el.innerHTML = r.map(g=>`<button class="row ${g===win?'win':''} ${g.n<MIN_N?'few':''} ${sel&&sel.key===key&&sel.name===g.name?'sel':''}" data-k="${key}" data-n="${esc(g.name)}">
+    <span class="sw" style="${key==='style'?`background:${col(g.name)}`:''}"></span>
+    <span><span class="nm">${esc(g.name)}</span><div class="bar"><i style="width:${Math.max(3,g.median/max*100)}%"></i></div></span>
+    <span class="meta" style="text-align:right">${fmt(g.median)}<br>${g.n<MIN_N?`n=${g.n} · too few`:`n=${g.n}`}</span></button>`).join("");
+  el.querySelectorAll(".row").forEach(b=>b.onclick=()=>{ sel={key:b.dataset.k,name:b.dataset.n}; renderAll(); });
+}
+
+function chart(){
+  const svg = document.getElementById("chart"), W=760,H=420,m={l:52,r:14,t:10,b:30};
+  const t = V.map(v=>+new Date(v.date)), t0=Math.min(...t), t1=Math.max(...t,t0+864e5);
+  const lo = Math.max(0, Math.floor(Math.log10(Math.min(...V.map(v=>v.views))))), hi = Math.ceil(Math.log10(Math.max(...V.map(v=>v.views)))+0.01);
+  const X = d => m.l + (d-t0)/(t1-t0)*(W-m.l-m.r), Y = v => H-m.b - (Math.log10(v)-lo)/(hi-lo)*(H-m.t-m.b);
+  let s = "";
+  for(let p=lo;p<=hi;p++){ const y=Y(10**p); s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end">${fmt(10**p)}</text>`; }
+  const ticks = 6;
+  for(let i=0;i<=ticks;i++){ const d=t0+(t1-t0)*i/ticks, x=X(d); s+=`<text x="${x}" y="${H-10}" text-anchor="${i==0?'start':i==ticks?'end':'middle'}">${new Date(d).toISOString().slice(0,7)}</text>`; }
+  V.forEach((v,i)=>{
+    const on = !sel || v[sel.key]===sel.name, picked = selVid===v.id;
+    s+=`<circle class="dot ${on?'':'dim'}" data-id="${v.id}" cx="${X(+new Date(v.date))}" cy="${Y(v.views)}" r="${picked?8:4.5}" fill="${col(v.style)}" ${picked?'stroke="var(--ink)" stroke-width="2"':''}/>`;
+  });
+  svg.innerHTML = s;
+  const tip = document.getElementById("tip");
+  svg.querySelectorAll(".dot").forEach(c=>{
+    const v = V.find(x=>x.id===c.dataset.id);
+    c.onmousemove = e=>{ tip.style.display="block"; tip.style.left=Math.min(e.clientX+12,innerWidth-300)+"px"; tip.style.top=e.clientY+12+"px";
+      tip.innerHTML=`<b>${esc(v.title)}</b><br>${fmt(v.views)} views · ${v.date}<br>${v.style} · ${v.hook} hook`; };
+    c.onmouseleave = ()=>tip.style.display="none";
+    c.onclick = ()=>{ selVid=v.id; renderAll(); document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"nearest"}); };
+  });
+}
+
+function list(){
+  const el = document.getElementById("list"), title = document.getElementById("listTitle");
+  if(!sel){ title.textContent="Click a style or hook to list its videos, best first"; el.innerHTML='<div class="empty">Nothing selected yet.</div>'; return; }
+  const vs = V.filter(v=>v[sel.key]===sel.name).sort((a,b)=>b.views-a.views);
+  title.textContent = `${sel.key==='style'?'Style':'Hook'}: ${sel.name} · ${vs.length} videos, best first`;
+  el.innerHTML = vs.map(v=>`<button class="vid ${v.id===selVid?'sel':''}" data-id="${v.id}"><span class="t">${esc(v.title)}</span><span class="v">${fmt(v.views)}</span></button>`).join("");
+  el.querySelectorAll(".vid").forEach(b=>b.onclick=()=>{ selVid=b.dataset.id; renderAll(); });
+}
+
+function detail(){
+  const el = document.getElementById("detail"), v = V.find(x=>x.id===selVid);
+  if(!v){ el.innerHTML='<div class="empty">Click a video (a dot, or a row in the list).</div>'; return; }
+  el.innerHTML = `<div class="detail"><div><img src="data/thumbs/${v.id}.jpg" alt="Thumbnail" onerror="this.style.visibility='hidden'"></div>
+    <div><b>${esc(v.title)}</b>
+    <div class="stats">${v.views.toLocaleString()} views${v.likes?` · ${v.likes.toLocaleString()} likes`:''} · ${v.date}${v.url?` · <a href="${esc(v.url)}" target="_blank" rel="noopener">open</a>`:''}</div>
+    <div style="margin-bottom:8px"><span class="chip" style="color:${col(v.style)}">${v.style} ${Math.round(v.style_p*100)}%</span><span class="chip">${v.hook} hook ${Math.round(v.hook_p*100)}%</span><span class="chip">CTA ${Math.round(v.cta*100)}%</span></div>
+    ${v.sents.map(s=>`<div class="sent"><span class="role r-${s.role}" title="${s.p!=null?Math.round(s.p*100)+'% sure':''}">${s.role||'?'}</span><span>${esc(s.t)}</span></div>`).join("")}
+    </div></div>`;
+}
+
+function renderAll(){
+  rankPanel("style", document.getElementById("styles")); rankPanel("hook", document.getElementById("hooks"));
+  chart(); list(); detail();
+}
+document.getElementById("sub").textContent = `${V.length} short-form videos broken down by Jev · ${D.tokens.toLocaleString()} input tokens · Jev cost $${D.cost.toFixed(4)}`;
+document.getElementById("foot").textContent = `Groups with fewer than ${MIN_N} videos are shown greyed out and can't win. Median views, not average, so one viral outlier doesn't decide the ranking. Views are as of the day the videos were collected.`;
+renderAll();
+</script>
+</body>
+</html>
