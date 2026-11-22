@@ -215,8 +215,11 @@ class Creator:
             if not sents: return "empty"
             ref = str(uuid.uuid4())
             state, qs = questions.build(info.get("title") or "", sents, ref)
+            small = d / "thumb_small.jpg"  # Jev rejects very large images: 960 px tall at most
+            if not small.exists():
+                subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(d / "thumb.jpg"), "-vf", "scale=-2:'min(960,ih)'", str(small)], check=True)
             payload = {"model": "jev-latest", "state": state, "questions": qs,
-                       "assets": {ref: {"type": "image", "format": "jpg", "data_base64": base64.b64encode((d / "thumb.jpg").read_bytes()).decode()}}}
+                       "assets": {ref: {"type": "image", "format": "jpg", "data_base64": base64.b64encode(small.read_bytes()).decode()}}}
             try:
                 j = post(cli, JEV, headers=H, json=payload)
             except Exception as ex:
@@ -232,18 +235,24 @@ class Creator:
         V = []
         for vid in self.ids("jev.json"):
             d = self.data / vid; i, j = rj(d / "info.json"), rj(d / "jev.json"); t = rj(d / "transcript.json")
+            en = rj(d / "english.json") if (d / "english.json").exists() else {}
+            orig = " ".join(en.get("original_sentences") or j["sentences"])
+            letters = [ch for ch in orig if ch.isalpha()]
+            latin = sum(ch.isascii() for ch in letters) / len(letters) if letters else 1.0
             a = j["answers"]; n = len(j["sentences"])
             if not i.get("date") or i.get("views") is None: continue
             V.append({"id": vid, "date": i["date"], "views": i["views"], "likes": i.get("likes"), "comments": i.get("comments"),
                 "duration": i.get("duration"), "title": i.get("title"), "caption": i.get("caption"), "url": i.get("url"),
                 "language": t.get("language"), "stt_model": t["model"], "low_confidence": t["low_confidence"],
-                "labelled_on_translation": j["on_english_translation"],
-                "style": a["style"]["choice"], "style_p": max(a["style"]["probabilities"].values()),
+                "labelled_on_translation": j["on_english_translation"], "original_text": orig, "latin_frac": round(latin, 3),
+                "tokens": j["usage"]["input_tokens"], "thumb": f"data/{vid}/thumb.jpg",
+                "style": a["style"]["choice"], "style_p": max(a["style"]["probabilities"].values()), "style_probs": a["style"]["probabilities"], "hook_probs": a["hook"]["probabilities"],
                 "hook": a["hook"]["choice"], "hook_p": max(a["hook"]["probabilities"].values()),
                 "has_cta": a["has_cta"]["noul"], "n_sentences": n,
                 "kind": "talking" if n >= 5 else "text_music" if n <= 2 else "in_between",
                 "pre_view_change": i["date"] < YT_VIEWS_CHANGE if i["platform"] == "youtube" else None,
-                "sentences": [{"text": s, "role": a.get(f"role_{k}", {}).get("choice")} for k, s in enumerate(j["sentences"], 1)]})
+                "sentences": [{"text": s, "role": a.get(f"role_{k}", {}).get("choice")} for k, s in enumerate(j["sentences"], 1)],
+                "translation_model": en.get("model"), "mean_logprob": t.get("mean_logprob")})
         if not V: sys.exit("nothing labelled yet")
         days = lambda s: dt.date.fromisoformat(s).toordinal()
         for v in V:  # lift = views / median views of the creator's OTHER shorts within +-45 days
@@ -273,6 +282,20 @@ class Creator:
                "low_confidence_transcripts": sum(v["low_confidence"] for v in V),
                "view_definition_note": f"YouTube Shorts count every play from {YT_VIEWS_CHANGE}; compare across that date with care.",
                "videos": V}
+        fails = {}
+        if self.failures.exists():
+            for l in self.failures.read_text().splitlines():
+                st_ = l.split("\t")[1] if "\t" in l else "?"; fails[st_] = fails.get(st_, 0) + 1
+        lst = self.dir / "listing.json"
+        listed = len([e for e in json.loads(lst.read_text()).get("entries", json.loads(lst.read_text()) if isinstance(json.loads(lst.read_text()), list) else [])]) if lst.exists() else None
+        res["funnel"] = {"listed": listed, "cap": self.cap, "downloaded": len(self.ids()),
+            "with_audio": sum(1 for i in self.ids() if list((self.data / i).glob("audio.*"))),
+            "transcribed": len(self.ids("transcript.json")), "english_ready": len(self.ids("english.json")),
+            "labelled": len(self.ids("jev.json")), "analysed": len(V), "failures_by_stage": fails,
+            "stt_models": sorted({v["stt_model"] for v in V}), "translation_model": TR_MODEL,
+            "jev_tokens": sum(v["tokens"] for v in V), "jev_cost_usd": round(sum(v["tokens"] for v in V) * JEV_PRICE_PER_M / 1e6, 4),
+            "built": dt.date.today().isoformat()}
+        res["creator_meta"] = {k: self.c.get(k) for k in ("n", "folder", "name", "platform", "url", "lang", "also")}
         wj(self.dir / "shorts_full.json", res)
         print(f"{self.c['name']}: {len(V)} videos -> shorts_full.json (median {res['distribution']['median']:,.0f}, top-10% share {res['distribution']['top10pct_share']:.0%})")
 
